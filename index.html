@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Questionnaire – Gestion budgétaire</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f3;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem 2rem 2.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .logo {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0F6E56;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: #e8e8e6;
+      border-radius: 2px;
+      margin-bottom: 2rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1D9E75;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .step { display: none; }
+    .step.active { display: block; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #0F6E56;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .question {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+
+    .question-sub {
+      font-size: 14px;
+      color: #6b6b68;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .intro-box {
+      background: #E1F5EE;
+      border-left: 3px solid #1D9E75;
+      padding: 1.1rem 1.3rem;
+      margin-bottom: 1.75rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .intro-box strong { color: #085041; display: block; margin-bottom: 4px; font-size: 15px; }
+    .intro-box p { color: #0F6E56; font-size: 14px; line-height: 1.7; }
+
+    .options { display: flex; flex-direction: column; gap: 10px; }
+
+    .opt {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 16px;
+      border: 1px solid #e0e0de;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #fff;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .opt:hover { border-color: #1D9E75; background: #f0faf6; }
+    .opt.checked { border-color: #1D9E75; background: #f0faf6; }
+
+    .opt input[type=radio],
+    .opt input[type=checkbox] {
+      accent-color: #1D9E75;
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .opt label {
+      font-size: 15px;
+      color: #1a1a1a;
+      cursor: pointer;
+      flex: 1;
+      line-height: 1.55;
+    }
+
+    textarea, input[type=text], input[type=email] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #e0e0de;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      background: #fff;
+      color: #1a1a1a;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea:focus, input[type=text]:focus, input[type=email]:focus {
+      border-color: #1D9E75;
+      box-shadow: 0 0 0 3px rgba(29,158,117,0.1);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+    }
+    .step-count { font-size: 13px; color: #9b9b98; }
+
+    .btn {
+      padding: 11px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #e0e0de;
+      background: #fff;
+      color: #1a1a1a;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: #f5f5f3; }
+    .btn.primary {
+      background: #0F6E56;
+      color: #fff;
+      border-color: #0F6E56;
+    }
+    .btn.primary:hover { background: #085041; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 10px;
+      margin-bottom: 0.5rem;
+    }
+    .price-card {
+      border: 1px solid #e0e0de;
+      border-radius: 10px;
+      padding: 16px 10px;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      transition: all 0.15s;
+    }
+    .price-card:hover { border-color: #1D9E75; background: #f0faf6; }
+    .price-card.selected { border: 2px solid #1D9E75; background: #f0faf6; }
+    .price-card .amount { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+    .price-card .period { font-size: 12px; color: #6b6b68; margin-top: 4px; line-height: 1.4; }
+
+    .scale-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+    .scale-btn {
+      width: 48px;
+      height: 48px;
+      border: 1px solid #e0e0de;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      transition: all 0.15s;
+    }
+    .scale-btn:hover, .scale-btn.selected {
+      border-color: #1D9E75;
+      background: #f0faf6;
+      color: #0F6E56;
+    }
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #9b9b98;
+      margin-top: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .field-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      margin-top: 1.25rem;
+    }
+
+    /* Résultat */
+    .result-wrap { text-align: center; padding: 1.5rem 0 0; }
+    .tick-circle {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: #E1F5EE;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.25rem;
+    }
+    .tick-circle svg { width: 28px; height: 28px; }
+    .result-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 0.75rem; }
+    .result-body { font-size: 15px; color: #6b6b68; line-height: 1.7; margin-bottom: 1.5rem; }
+
+    /* Loader */
+    .loader-wrap { text-align: center; padding: 1rem 0; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid #e0e0de;
+      border-top-color: #1D9E75;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 0.75rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { font-size: 14px; color: #6b6b68; }
+
+    .error-box {
+      background: #FFF0F0;
+      border: 1px solid #FFBDBD;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #A32D2D;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 1.5rem 1.25rem 2rem; }
+      .question { font-size: 16px; }
+      .scale-btn { width: 42px; height: 42px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="logo">BudgetSuivi</div>
+  <div class="progress-bar"><div class="progress-fill" id="progress" style="width:12%"></div></div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 1 — Profil
+  ═══════════════════════════════════════════ -->
+  <div class="step active" id="s1">
+    <div class="intro-box">
+      <strong>Bonjour,</strong>
+      <p>Ce questionnaire s'adresse à toute personne qui gère un budget dans son travail. Il dure moins de 3 minutes. Vos réponses nous aident à créer un outil simple et adapté à vos besoins réels.</p>
+    </div>
+    <div class="section-label">Votre situation</div>
+    <div class="question">Dans quel cadre gérez-vous un budget ?</div>
+    <div class="options">
+      <label class="opt"><input type="radio" name="profil" value="Chef d'établissement scolaire"><label>Chef d'établissement scolaire</label></label>
+      <label class="opt"><input type="radio" name="profil" value="Responsable d'une association ou ONG"><label>Responsable d'une association ou ONG</label></label>
+      <label class="opt"><input type="radio" name="profil" value="Gérant d'une petite entreprise"><label>Gérant d'une petite entreprise</label></label>
+      <label class="opt"><input type="radio" name="profil" value="Responsable dans une administration ou mairie"><label>Responsable dans une administration ou mairie</label></label>
+      <label class="opt"><input type="radio" name="profil" value="Chef de projet ou responsable de service"><label>Chef de projet ou responsable d'un service</label></label>
+      <label class="opt"><input type="radio" name="profil" value="Autre"><label>Autre</label></label>
+    </div>
+    <div class="nav"><span class="step-count">1 / 8</span><button class="btn primary" onclick="next(1)">Suivant →</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 2 — Méthode actuelle
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="s2">
+    <div class="section-label">Votre méthode actuelle</div>
+    <div class="question">Comment suivez-vous vos dépenses aujourd'hui ?</div>
+    <div class="options">
+      <label class="opt"><input type="radio" name="outil" value="Un tableau Excel ou Google Sheets"><label>Un tableau Excel ou Google Sheets</label></label>
+      <label class="opt"><input type="radio" name="outil" value="Un cahier ou des feuilles papier"><label>Un cahier ou des feuilles papier</label></label>
+      <label class="opt"><input type="radio" name="outil" value="Un logiciel imposé par mon organisation"><label>Un logiciel imposé par mon organisation</label></label>
+      <label class="opt"><input type="radio" name="outil" value="De tête, sans support particulier"><label>De tête, sans support particulier</label></label>
+      <label class="opt"><input type="radio" name="outil" value="Autre"><label>Autre</label></label>
+    </div>
+    <div class="nav"><button class="btn" onclick="prev(2)">← Retour</button><span class="step-count">2 / 8</span><button class="btn primary" onclick="next(2)">Suivant →</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 3 — Le problème
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="s3">
+    <div class="section-label">Le problème</div>
+    <div class="question">Vous est-il déjà arrivé de dépenser plus que prévu sur un poste de dépense, sans vous en rendre compte à temps ?</div>
+    <div class="options">
+      <label class="opt"><input type="radio" name="depasse" value="Oui, plusieurs fois dans l'année"><label>Oui, cela m'arrive plusieurs fois dans l'année</label></label>
+      <label class="opt"><input type="radio" name="depasse" value="Oui, une ou deux fois"><label>Oui, une ou deux fois</label></label>
+      <label class="opt"><input type="radio" name="depasse" value="Pas encore mais difficile à surveiller"><label>Pas encore, mais c'est difficile à surveiller au quotidien</label></label>
+      <label class="opt"><input type="radio" name="depasse" value="Non, j'ai toujours une bonne visibilité"><label>Non, j'ai toujours une bonne visibilité sur mes dépenses</label></label>
+    </div>
+    <div class="nav"><button class="btn" onclick="prev(3)">← Retour</button><span class="step-count">3 / 8</span><button class="btn primary" onclick="next(3)">Suivant →</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 4 — Difficultés
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="s4">
+    <div class="section-label">Vos difficultés</div>
+    <div class="question">Qu'est-ce qui vous pose le plus de difficultés quand vous suivez vos dépenses ?</div>
+    <div class="question-sub">Cochez tout ce qui vous correspond</div>
+    <div class="options">
+      <label class="opt"><input type="checkbox" name="pain" value="Je ne sais pas toujours où j'en suis sur chaque poste"><label>Je ne sais pas toujours où j'en suis sur chaque poste de dépense</label></label>
+      <label class="opt"><input type="checkbox" name="pain" value="Je note les dépenses trop tard ou je les oublie"><label>Je note les dépenses trop tard ou je les oublie</label></label>
+      <label class="opt"><input type="checkbox" name="pain" value="Personne ne me prévient quand un poste est presque épuisé"><label>Personne ne me prévient quand un poste est presque épuisé</label></label>
+      <label class="opt"><input type="checkbox" name="pain" value="Plusieurs personnes dépensent et je perds le fil"><label>Plusieurs personnes font des dépenses et je perds le fil</label></label>
+      <label class="opt"><input type="checkbox" name="pain" value="C'est long de faire le point chaque mois"><label>C'est long et fastidieux de faire le point chaque mois</label></label>
+      <label class="opt"><input type="checkbox" name="pain" value="Je n'arrive pas à produire un résumé clair pour mes supérieurs"><label>Je n'arrive pas à produire un résumé clair pour mes supérieurs ou mon conseil</label></label>
+      <label class="opt"><input type="checkbox" name="pain" value="Je ne sais pas comment utiliser les sommes restantes"><label>Je ne sais pas comment utiliser les sommes restantes en cours d'année</label></label>
+    </div>
+    <div class="nav"><button class="btn" onclick="prev(4)">← Retour</button><span class="step-count">4 / 8</span><button class="btn primary" onclick="next(4)">Suivant →</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 5 — Ce qui aiderait
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="s5">
+    <div class="section-label">Ce qui vous aiderait</div>
+    <div class="question">Si un outil simple existait pour vous aider, qu'est-ce qui serait le plus important pour vous ?</div>
+    <div class="question-sub">Choisissez vos 3 priorités maximum</div>
+    <div class="options">
+      <label class="opt"><input type="checkbox" name="feat" value="Voir en un coup d'œil combien il reste sur chaque poste"><label>Voir en un coup d'œil combien il reste sur chaque poste de dépense</label></label>
+      <label class="opt"><input type="checkbox" name="feat" value="Recevoir une alerte quand un poste est presque dépassé"><label>Recevoir une alerte quand un poste est presque dépassé</label></label>
+      <label class="opt"><input type="checkbox" name="feat" value="Enregistrer facilement chaque dépense au fur et à mesure"><label>Enregistrer facilement chaque dépense au fur et à mesure</label></label>
+      <label class="opt"><input type="checkbox" name="feat" value="Partager le suivi avec d'autres personnes de mon équipe"><label>Partager le suivi avec d'autres personnes de mon équipe</label></label>
+      <label class="opt"><input type="checkbox" name="feat" value="Générer un résumé à imprimer ou à envoyer"><label>Générer un résumé à imprimer ou à envoyer facilement</label></label>
+      <label class="opt"><input type="checkbox" name="feat" value="Comparer ce qui était prévu avec ce qui a été réellement dépensé"><label>Comparer ce qui était prévu avec ce qui a été réellement dépensé</label></label>
+    </div>
+    <div class="nav"><button class="btn" onclick="prev(5)">← Retour</button><span class="step-count">5 / 8</span><button class="btn primary" onclick="next(5)">Suivant →</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 6 — Prix
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="s6">
+    <div class="section-label">Ce que vous seriez prêt à payer</div>
+    <div class="question">Si cet outil résolvait vraiment vos problèmes, combien seriez-vous prêt à payer par mois pour l'utiliser ?</div>
+    <div class="price-grid" id="price-grid">
+      <div class="price-card" onclick="selectPrice(this,'Gratuit uniquement')"><div class="amount">Gratuit</div><div class="period">je ne paierais pas</div></div>
+      <div class="price-card" onclick="selectPrice(this,'Moins de 3 000 FCFA')"><div class="amount">- de 3 000</div><div class="period">FCFA / mois</div></div>
+      <div class="price-card" onclick="selectPrice(this,'3 000 à 6 000 FCFA')"><div class="amount">3 000 – 6 000</div><div class="period">FCFA / mois</div></div>
+      <div class="price-card" onclick="selectPrice(this,'6 000 à 10 000 FCFA')"><div class="amount">6 000 – 10 000</div><div class="period">FCFA / mois</div></div>
+      <div class="price-card" onclick="selectPrice(this,'10 000 à 20 000 FCFA')"><div class="amount">10 000 – 20 000</div><div class="period">FCFA / mois</div></div>
+      <div class="price-card" onclick="selectPrice(this,'Plus de 20 000 FCFA')"><div class="amount">+ de 20 000</div><div class="period">FCFA / mois</div></div>
+    </div>
+    <div class="nav"><button class="btn" onclick="prev(6)">← Retour</button><span class="step-count">6 / 8</span><button class="btn primary" onclick="next(6)">Suivant →</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 7 — Intention + frein
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="s7">
+    <div class="section-label">Votre intérêt</div>
+    <div class="question">Si cet outil existait aujourd'hui, quelle est la probabilité que vous l'utilisiez ?</div>
+    <div class="question-sub">1 = très peu probable — 10 = je l'utiliserais tout de suite</div>
+    <div class="scale-wrap" id="scale-wrap"></div>
+    <div class="scale-labels"><span>Peu probable</span><span>Certain</span></div>
+
+    <div class="field-label">Qu'est-ce qui pourrait vous empêcher de l'utiliser ?</div>
+    <textarea id="frein" rows="3" placeholder="Ex : pas le temps, manque de budget, besoin d'une connexion internet..."></textarea>
+
+    <div class="nav"><button class="btn" onclick="prev(7)">← Retour</button><span class="step-count">7 / 8</span><button class="btn primary" onclick="next(7)">Suivant →</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ÉTAPE 8 — Contact
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="s8">
+    <div class="section-label">Rester informé</div>
+    <div class="question">Voulez-vous être informé quand l'outil sera disponible ?</div>
+    <div class="options" style="margin-bottom:1.25rem">
+      <label class="opt"><input type="checkbox" name="interet" value="Être prévenu au lancement"><label>Oui, me prévenir quand c'est prêt</label></label>
+      <label class="opt"><input type="checkbox" name="interet" value="Tester l'outil en avant-première"><label>Oui, tester l'outil avant tout le monde</label></label>
+      <label class="opt"><input type="checkbox" name="interet" value="Recevoir une démonstration"><label>Oui, voir une démonstration de l'outil</label></label>
+    </div>
+
+    <div class="field-label">Votre numéro de téléphone ou adresse email <span style="font-weight:400;color:#9b9b98">(facultatif)</span></div>
+    <input type="text" id="contact" placeholder="Ex : 77 123 45 67 ou nom@email.com" style="margin-bottom:1rem" />
+
+    <div class="field-label">Un dernier mot ? Une difficulté que nous n'avons pas mentionnée ?</div>
+    <textarea id="remarque" rows="3" placeholder="Écrivez librement..."></textarea>
+
+    <div id="error-box" class="error-box">Une erreur est survenue lors de l'envoi. Veuillez réessayer.</div>
+
+    <div class="nav">
+      <button class="btn" onclick="prev(8)">← Retour</button>
+      <span class="step-count">8 / 8</span>
+      <button class="btn primary" id="btn-submit" onclick="finish()">Envoyer ✓</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CHARGEMENT
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="sLoader">
+    <div class="loader-wrap">
+      <div class="spinner"></div>
+      <div class="loader-text">Envoi en cours...</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       RÉSULTAT
+  ═══════════════════════════════════════════ -->
+  <div class="step" id="sResult">
+    <div class="result-wrap">
+      <div class="tick-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div class="result-title">Merci beaucoup !</div>
+      <div class="result-body">Vos réponses ont bien été enregistrées.<br>Elles nous aident vraiment à construire quelque chose d'utile pour vous.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ════════════════════════════════════════════════
+  // ⚠️  REMPLACEZ CETTE URL PAR CELLE DE VOTRE
+  //     GOOGLE APPS SCRIPT APRÈS DÉPLOIEMENT
+  // ════════════════════════════════════════════════
+  const SCRIPT_URL = "COLLEZ_ICI_L_URL_DE_VOTRE_APPS_SCRIPT";
+
+  // ────────────────────────────────────────────────
+  let answers = {};
+  let priceSelected = '';
+  let scaleSelected = '';
+  let currentStep = 1;
+  const TOTAL = 8;
+
+  // Générer les boutons de l'échelle 1-10
+  for (let i = 1; i <= 10; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'scale-btn';
+    b.textContent = i;
+    b.onclick = () => {
+      document.querySelectorAll('.scale-btn').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      scaleSelected = i;
+    };
+    document.getElementById('scale-wrap').appendChild(b);
+  }
+
+  // Surligner les options quand cochées
+  document.addEventListener('change', e => {
+    if (e.target.matches('input[type=radio]')) {
+      const name = e.target.name;
+      document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+        r.closest('.opt').classList.remove('checked');
+      });
+      e.target.closest('.opt').classList.add('checked');
+    }
+    if (e.target.matches('input[type=checkbox]')) {
+      e.target.closest('.opt').classList.toggle('checked', e.target.checked);
+    }
+  });
+
+  function selectPrice(el, val) {
+    document.querySelectorAll('.price-card').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+    priceSelected = val;
+  }
+
+  function updateProgress(step) {
+    const pct = Math.round((step / (TOTAL + 1)) * 100);
+    document.getElementById('progress').style.width = pct + '%';
+  }
+
+  function showStep(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function collect(step) {
+    if (step === 1) {
+      const v = document.querySelector('input[name=profil]:checked');
+      answers.profil = v ? v.value : '—';
+    }
+    if (step === 2) {
+      const v = document.querySelector('input[name=outil]:checked');
+      answers.outil = v ? v.value : '—';
+    }
+    if (step === 3) {
+      const v = document.querySelector('input[name=depasse]:checked');
+      answers.depasse = v ? v.value : '—';
+    }
+    if (step === 4) {
+      answers.difficultes = [...document.querySelectorAll('input[name=pain]:checked')]
+        .map(x => x.value).join(' | ') || '—';
+    }
+    if (step === 5) {
+      answers.fonctionnalites = [...document.querySelectorAll('input[name=feat]:checked')]
+        .map(x => x.value).join(' | ') || '—';
+    }
+    if (step === 6) {
+      answers.prix = priceSelected || '—';
+    }
+    if (step === 7) {
+      answers.intention = scaleSelected ? scaleSelected + '/10' : '—';
+      answers.frein = document.getElementById('frein').value.trim() || '—';
+    }
+    if (step === 8) {
+      answers.interet = [...document.querySelectorAll('input[name=interet]:checked')]
+        .map(x => x.value).join(' | ') || '—';
+      answers.contact = document.getElementById('contact').value.trim() || '—';
+      answers.remarque = document.getElementById('remarque').value.trim() || '—';
+    }
+  }
+
+  function next(step) {
+    collect(step);
+    currentStep = step + 1;
+    updateProgress(currentStep);
+    showStep('s' + currentStep);
+  }
+
+  function prev(step) {
+    currentStep = step - 1;
+    updateProgress(currentStep);
+    showStep('s' + currentStep);
+  }
+
+  async function finish() {
+    collect(8);
+
+    // Ajouter la date et l'heure
+    answers.date = new Date().toLocaleString('fr-FR');
+
+    // Afficher le loader
+    showStep('sLoader');
+    document.getElementById('error-box').style.display = 'none';
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(answers)
+      });
+      showStep('sResult');
+      updateProgress(TOTAL + 1);
+    } catch (err) {
+      showStep('s8');
+      document.getElementById('error-box').style.display = 'block';
+    }
+  }
+</script>
+</body>
+</html>
